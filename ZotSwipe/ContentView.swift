@@ -8,17 +8,38 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var selectedTab = 1
+    @EnvironmentObject private var firebaseService: FirebaseService
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView(selection: $selectedTab) {
+            DiningHallsView()
+                .tabItem {
+                    Label("Dining Halls", systemImage: "fork.knife")
+                }
+                .tag(0)
+            
+            MarketplaceView()
+                .tabItem {
+                    Label("Swipe Market", systemImage: "cart")
+                }
+                .tag(1)
+            
+            AboutView()
+                .tabItem {
+                    Label("About", systemImage: "info.circle")
+                }
+                .tag(2)
         }
-        .padding()
     }
 }
 
-#Preview {
-    ContentView()
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+            .environmentObject(FirebaseService())
+    }
 }
+
+// 保留 MarketplaceView, ListingRow, 和 SwipeListing 的定义
+// ...
