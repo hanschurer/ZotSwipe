@@ -88,7 +88,7 @@ struct DetailRow: View {
     let value: String
     
     var body: some View {
-        HStack(alignment: .top) {
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: icon)
                 .foregroundColor(.blue)
                 .frame(width: 20)
@@ -99,6 +99,9 @@ struct DetailRow: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
+            Spacer()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 8)
     }
 }

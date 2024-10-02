@@ -40,6 +40,3 @@ struct ContentView_Previews: PreviewProvider {
             .environmentObject(FirebaseService())
     }
 }
-
-// 保留 MarketplaceView, ListingRow, 和 SwipeListing 的定义
-// ...

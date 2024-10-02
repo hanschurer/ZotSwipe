@@ -1,6 +1,5 @@
 import SwiftUI
 import FirebaseFirestore
-import UIKit
 
 struct BuyerView: View {
     @EnvironmentObject private var firebaseService: FirebaseService
@@ -15,16 +14,9 @@ struct BuyerView: View {
     @State private var showAlert = false
     @State private var alertMessage = ""
     @Environment(\.colorScheme) var colorScheme
-    @FocusState private var focusedField: Field?
-    @State private var keyboardHeight: CGFloat = 0
-    @State private var isKeyboardVisible = false
 
     let meals = ["Breakfast", "Lunch", "Dinner"]
     let locations = ["Anteatery", "Brandywine"]
-
-    enum Field: Hashable {
-        case buyerName, contactInfo, note
-    }
 
     var isFormValid: Bool {
         swipeAmount > 0 &&
@@ -88,50 +80,37 @@ struct BuyerView: View {
             }
 
             Section(header: Text("Contact Information")) {
-                OptimizedTextField(text: $buyerName, placeholder: "Your Name")
-                    .focused($focusedField, equals: .buyerName)
-                OptimizedTextField(text: $contactInfo, placeholder: "Phone Number", keyboardType: .phonePad)
-                    .focused($focusedField, equals: .contactInfo)
+                TextField("Your Name", text: $buyerName)
+                TextField("Phone Number", text: $contactInfo)
+                    .keyboardType(.phonePad)
                     .onChange(of: contactInfo) { newValue in
                         contactInfo = formatPhoneNumber(newValue)
                     }
             }
 
             Section(header: Text("Note (Optional)")) {
-                OptimizedTextField(text: $note, placeholder: "Add a note")
-                    .focused($focusedField, equals: .note)
+                TextField("Add a note", text: $note)
             }
 
             Section {
                 Button(action: submitForm) {
-                    Text("Create Listing")
+                    Text("Submit")
+                        .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(isFormValid ? Color.blue : Color.gray)
+                        .background(isFormValid ? Color.blue.gradient : Color.gray.gradient)
                         .foregroundColor(.white)
-                        .cornerRadius(10)
+                        .cornerRadius(15)
+                        .shadow(color: isFormValid ? .blue.opacity(0.3) : .gray.opacity(0.3), radius: 5, x: 0, y: 3)
                 }
                 .disabled(!isFormValid)
+                .animation(.easeInOut, value: isFormValid)
             }
+            .listRowBackground(Color.clear)
         }
         .alert(isPresented: $showAlert) {
             Alert(title: Text("Notification"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
         }
-        .onAppear {
-            preheatTextFields()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
-            if let keyboardFrame: NSValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue {
-                let keyboardRectangle = keyboardFrame.cgRectValue
-                keyboardHeight = keyboardRectangle.height
-                isKeyboardVisible = true
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-            keyboardHeight = 0
-            isKeyboardVisible = false
-        }
-        .animation(.default, value: keyboardHeight)
     }
 
     private func submitForm() {
@@ -219,15 +198,6 @@ struct BuyerView: View {
     private func backgroundForButton() -> Color {
         colorScheme == .dark ? Color(UIColor.secondarySystemBackground) : Color.white
     }
-
-    private func preheatTextFields() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.focusedField = .buyerName
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                self.focusedField = nil
-            }
-        }
-    }
 }
 
 struct DateButton: View {
@@ -252,44 +222,5 @@ struct DateButton: View {
             )
         }
         .foregroundColor(isSelected ? .blue : .primary)
-    }
-}
-
-struct OptimizedTextField: UIViewRepresentable {
-    @Binding var text: String
-    var placeholder: String
-    var keyboardType: UIKeyboardType = .default
-
-    func makeUIView(context: Context) -> UITextField {
-        let textField = UITextField()
-        textField.delegate = context.coordinator
-        textField.placeholder = placeholder
-        textField.keyboardType = keyboardType
-        return textField
-    }
-
-    func updateUIView(_ uiView: UITextField, context: Context) {
-        uiView.text = text
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    class Coordinator: NSObject, UITextFieldDelegate {
-        var parent: OptimizedTextField
-
-        init(_ parent: OptimizedTextField) {
-            self.parent = parent
-        }
-
-        func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-            if let text = textField.text,
-               let textRange = Range(range, in: text) {
-                let updatedText = text.replacingCharacters(in: textRange, with: string)
-                parent.text = updatedText
-            }
-            return false
-        }
     }
 }
